@@ -115,7 +115,8 @@ class XMLLogic:
     def saveCurrentItemDetails(self):
         if self.current_item is not None:
             print(f"Saving current item details for: {self.current_item.get('name')}")  # Debug info
-            self.current_item.set('name', self.details_widgets['name'].text())
+            if 'name' in self.details_widgets:  # Проверка на наличие ключа 'name'
+                self.current_item.set('name', self.details_widgets['name'].text())
 
             # Handle all child elements that are in self.details_widgets
             for tag in self.details_widgets:
@@ -169,7 +170,7 @@ class XMLLogic:
             name_edit.textChanged.connect(lambda text, widget=name_edit: self.add_undo_command(widget, text))
             self.viewer.details_layout.addWidget(name_label)
             self.viewer.details_layout.addWidget(name_edit)
-            self.details_widgets['name'] = name_edit
+            self.details_widgets['name'] = name_edit  # Добавляем виджет имени в details_widgets
 
             for child in self.current_item:
                 if child.tag == 'flags':
