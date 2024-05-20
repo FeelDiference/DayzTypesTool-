@@ -192,6 +192,7 @@ class XMLViewer(QWidget):
 
     def displayItemDetails(self, item):
         if hasattr(self, 'mass_edit_dialog') and self.mass_edit_dialog.isVisible():
+            print("Mass Edit dialog is open, not updating details")  # Debug info
             return  # Do not update details if mass edit dialog is open
         self.xml_logic.displayItemDetails(item)
 
@@ -234,14 +235,33 @@ class XMLViewer(QWidget):
         self.mass_edit_dialog.lifetime_slider_value = self.lifetime_slider_value
         self.mass_edit_dialog.restock_slider_value = self.restock_slider_value
         self.mass_edit_dialog.load_slider_values()  # Load current slider values
+        self.mass_edit_dialog.finished.connect(self.onMassEditDialogClosed)  # Connect the finished signal to update the active item
         self.mass_edit_dialog.show()
+
+    def onMassEditDialogClosed(self):
+        print("Mass Edit dialog closed")  # Debug info
+        self.loadXMLItems()  # Перезагрузить элементы XML
+        self.refresh_active_item()
+
+    def refresh_active_item(self):
+        # Восстановить последний активный элемент
+        selected_items = self.get_selected_list_items()
+        if selected_items:
+            last_item_name = selected_items[-1].text()
+            for index in range(self.list_widget.count()):
+                list_item = self.list_widget.item(index)
+                if list_item.text() == last_item_name:
+                    print(f"Refreshing active item: {last_item_name}")  # Debug info
+                    self.list_widget.setCurrentItem(list_item)
+                    self.displayItemDetails(list_item)
+                    break
 
     def update_item_in_list(self, item):
         for i in range(self.list_widget.count()):
             list_item = self.list_widget.item(i)
             if list_item.text() == item.get('name'):
+                print(f"Updating item in list: {item.get('name')}")  # Debug info
                 self.displayItemDetails(list_item)
-                print(f"Updated item in list: {item.get('name')}")  # Debug info
                 break
 
     def get_selected_list_items(self):

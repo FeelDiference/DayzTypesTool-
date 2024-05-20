@@ -227,7 +227,6 @@ class MassEditDialog(QDialog):
     def onRemoveClicked(self, param, value, layout):
         selected_items = self.xml_logic.get_selected_items()
         for item in selected_items:
-            print(f"Processing item: {item.get('name')}")  # Debug info
             elements = item.findall(param.lower())
             for element in elements:
                 if element.get('name') == value:
@@ -280,6 +279,7 @@ class MassEditDialog(QDialog):
                         current_value = int(element.text)
                         new_value = int(current_value * multiplier)
                         element.text = str(new_value)
+                        print(f"Set {param} to {new_value} for item '{item.get('name')}' using multiplier {multiplier}")  # Debug info
                         self.xml_logic.viewer.update_item_in_list(item)
 
     def onInputChanged(self, param):
@@ -332,17 +332,6 @@ class MassEditDialog(QDialog):
         self.parent.restock_slider_value = self.restock_slider_value
 
         self.accept()
-        self.xml_logic.viewer.loadXMLItems()  # Перезагрузить элементы XML
-
-        # Восстановить последний активный элемент
-        if selected_items:
-            last_item_name = selected_items[-1].get('name')
-            for index in range(self.xml_logic.viewer.list_widget.count()):
-                list_item = self.xml_logic.viewer.list_widget.item(index)
-                if list_item.text() == last_item_name:
-                    self.xml_logic.viewer.list_widget.setCurrentItem(list_item)
-                    self.xml_logic.viewer.displayItemDetails(list_item)
-                    break
 
     def apply_combo_values(self, param, selected_items):
         combo = getattr(self, f"{param}_add_combo")
@@ -374,6 +363,7 @@ class MassEditDialog(QDialog):
                     original_value = self.original_values[param][index]
                     new_value = int(original_value * (slider_value / 100))
                     element.text = str(new_value)
+                    print(f"Set {param} to {new_value} for item '{item.get('name')}' using slider value {slider_value}%")  # Debug info
                     self.xml_logic.viewer.update_item_in_list(item)
                 except IndexError as e:
                     print(f"IndexError: {e}. Index: {index}, Param: {param}, Selected Items: {len(selected_items)}, Original Values: {len(self.original_values[param])}")
@@ -391,6 +381,7 @@ class MassEditDialog(QDialog):
                     element = item.find(param)
                     if element is not None:
                         element.text = standard_value
+                        print(f"Set {param} to standard value {standard_value} for item '{item.get('name')}'")  # Debug info
                         self.xml_logic.viewer.update_item_in_list(item)
 
     def load_slider_values(self):
