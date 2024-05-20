@@ -65,12 +65,12 @@ class MassEditDialog(QDialog):
 
             layout.addLayout(param_layout)
 
-        # Create category dropdown
+        # Create category dropdown with checkbox
         category_layout = QHBoxLayout()
-        category_label = QLabel("Category:", self)
+        self.category_checkbox = QCheckBox("Category", self)
         self.category_combo = QComboBox(self)
         self.category_combo.addItems(self.xml_logic.category_options)
-        category_layout.addWidget(category_label)
+        category_layout.addWidget(self.category_checkbox)
         category_layout.addWidget(self.category_combo)
         layout.addLayout(category_layout)
 
@@ -272,8 +272,6 @@ class MassEditDialog(QDialog):
             self.loadStandardValues()
             return
 
-        self.xml_logic.saveCurrentItemDetails()  # Сохранить текущий объект перед массовыми изменениями
-
         for param in self.parameters:
             if self.checkboxes[param].isChecked() and not self.input_fields[param].text():
                 for item in self.xml_logic.get_selected_items():
@@ -288,8 +286,6 @@ class MassEditDialog(QDialog):
         self.checkboxes[param].setEnabled(not self.input_fields[param].text())
 
     def onOk(self):
-        self.xml_logic.saveCurrentItemDetails()  # Сохранить текущий объект перед массовыми изменениями
-
         selected_items = self.xml_logic.get_selected_items()
         print(f"Selected items: {[item.get('name') for item in selected_items]}")  # Debug info
 
@@ -306,16 +302,17 @@ class MassEditDialog(QDialog):
                     print(f"Set {param} to {new_value} for item '{item.get('name')}'")  # Debug info
                     self.xml_logic.viewer.update_item_in_list(item)
 
-        # Apply category
-        new_category = self.category_combo.currentText()
-        for item in selected_items:
-            category_element = item.find('category')
-            if category_element is not None:
-                category_element.set('name', new_category)
-            else:
-                ET.SubElement(item, 'category', name=new_category)
-            print(f"Set category to {new_category} for item '{item.get('name')}'")  # Debug info
-            self.xml_logic.viewer.update_item_in_list(item)
+        # Apply category if checkbox is checked
+        if self.category_checkbox.isChecked():
+            new_category = self.category_combo.currentText()
+            for item in selected_items:
+                category_element = item.find('category')
+                if category_element is not None:
+                    category_element.set('name', new_category)
+                else:
+                    ET.SubElement(item, 'category', name=new_category)
+                print(f"Set category to {new_category} for item '{item.get('name')}'")  # Debug info
+                self.xml_logic.viewer.update_item_in_list(item)
 
         # Apply Usage, Value, Tag
         self.apply_combo_values('usage', selected_items)

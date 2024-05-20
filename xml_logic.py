@@ -2,7 +2,7 @@ import os
 import xml.etree.ElementTree as ET
 from PyQt5.QtWidgets import (
     QUndoStack, QUndoCommand, QLineEdit, QComboBox, QTextEdit, QCheckBox,
-    QLabel, QPushButton, QHBoxLayout, QFileDialog
+    QLabel, QPushButton, QHBoxLayout, QFileDialog, QMessageBox
 )
 from PyQt5.QtCore import Qt
 from xml.dom import minidom
@@ -77,7 +77,15 @@ class XMLLogic:
 
     def saveFile(self):
         if self.xml_tree is not None:
-            file_name = self.xml_tree.getroot().attrib['file']
+            root = self.xml_tree.getroot()
+            if 'file' in root.attrib:
+                file_name = root.attrib['file']
+            else:
+                file_name, _ = QFileDialog.getSaveFileName(self.viewer, "Save XML File", "", "XML Files (*.xml);;All Files (*)")
+                if not file_name:
+                    QMessageBox.critical(self.viewer, "Error", "No file name specified. Cannot save file.")
+                    return
+                root.set('file', file_name)
             self.prettify_and_write_xml(file_name)
 
     def saveFileAs(self):
@@ -124,7 +132,7 @@ class XMLLogic:
                         self.current_item.remove(elem)
                     # Add updated elements
                     widgets = self.details_widgets[tag]
-                    if tag in ['usage', 'value', 'tag']:
+                    if tag in ['usage', 'value']:
                         for widget, layout in widgets:
                             if isinstance(widget, QLineEdit):
                                 ET.SubElement(self.current_item, tag, name=widget.text())

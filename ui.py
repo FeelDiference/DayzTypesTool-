@@ -228,6 +228,7 @@ class XMLViewer(QWidget):
         self.xml_logic.redo()
 
     def openMassEditDialog(self):
+        self.xml_logic.saveCurrentItemDetails()  # Сохранить текущий объект перед массовыми изменениями
         self.mass_edit_dialog = MassEditDialog(self.xml_logic, self)
         self.mass_edit_dialog.setModal(False)  # Allow interaction with the main window
         self.mass_edit_dialog.lifetime_slider_value = self.lifetime_slider_value
