@@ -48,9 +48,10 @@ class XMLLogic:
         self.viewer = viewer
         self.xml_root = None
         self.current_item = None
-        self.details_widgets = {}  # Инициализация атрибута
-        self.undo_stacks = {}  # Добавление для управления undo/redo командами
+        self.details_widgets = {}
+        self.undo_stacks = {}
         self.current_undo_stack = None
+        self.initial_values = {}
 
         # Define category, usage, value, and tag options
         self.category_options = [
@@ -73,7 +74,20 @@ class XMLLogic:
     def loadXML(self, file_name):
         self.xml_tree = ET.parse(file_name)
         self.xml_root = self.xml_tree.getroot()
+        self.initial_values = self._get_initial_values()
         self.viewer.loadXMLItems()
+
+    def _get_initial_values(self):
+        initial_values = {}
+        for item in self.xml_root.findall('type'):
+            name = item.get('name')
+            initial_values[name] = {
+                'nominal': item.find('nominal').text if item.find('nominal') is not None else '',
+                'min': item.find('min').text if item.find('min') is not None else '',
+                'lifetime': item.find('lifetime').text if item.find('lifetime') is not None else '',
+                'restock': item.find('restock').text if item.find('restock') is not None else ''
+            }
+        return initial_values
 
     def saveFile(self):
         if self.xml_tree is not None:
@@ -115,7 +129,7 @@ class XMLLogic:
     def saveCurrentItemDetails(self):
         if self.current_item is not None:
             print(f"Saving current item details for: {self.current_item.get('name')}")  # Debug info
-            if 'name' in self.details_widgets:  # Проверка на наличие ключа 'name'
+            if 'name' in self.details_widgets:
                 self.current_item.set('name', self.details_widgets['name'].text())
 
             # Handle all child elements that are in self.details_widgets
@@ -170,7 +184,7 @@ class XMLLogic:
             name_edit.textChanged.connect(lambda text, widget=name_edit: self.add_undo_command(widget, text))
             self.viewer.details_layout.addWidget(name_label)
             self.viewer.details_layout.addWidget(name_edit)
-            self.details_widgets['name'] = name_edit  # Добавляем виджет имени в details_widgets
+            self.details_widgets['name'] = name_edit
 
             for child in self.current_item:
                 if child.tag == 'flags':
@@ -289,16 +303,16 @@ class XMLLogic:
         if field_type == 'usage':
             if last_category_pos is not None:
                 return last_category_pos + 1
-            return 2  # Если нет category, вернем позицию после имени
+            return 2
 
         if field_type == 'value':
             if last_usage_pos is not None:
                 return last_usage_pos + 1
             if last_category_pos is not None:
                 return last_category_pos + 1
-            return 2  # Если нет category и usage, вернем позицию после имени
+            return 2
 
-        return self.viewer.details_layout.count() - 3  # Перед добавлением кнопок
+        return self.viewer.details_layout.count() - 3
 
     def add_tag_field(self, tag_name=''):
         print(f"Adding tag field: {tag_name}")  # Debug info
